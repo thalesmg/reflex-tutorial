@@ -16,16 +16,29 @@ ex02 ::
   Outputs t
 ex02 (Inputs bMoney eCarrot eCelery eCucumber eRefund) =
   let
+    tryBuy money p =
+      if pCost p <= money
+      then Right p
+      else Left p
+    (eNotEnough, eBought)
+      = fanEither
+      . attachWith tryBuy bMoney
+      $ eProduct
+    eProduct =
+      leftmost [ carrot <$ eCarrot
+               , celery <$ eCelery
+               , cucumber <$ eCucumber
+               ]
     eVend =
-      never
+      ffor eBought pName
     eSpend =
-      never
+      ffor eBought pCost
     eChange =
-      never
-    eError =
-      never
+      bMoney <@ eRefund
+    eNotEnoughMoney =
+      NotEnoughMoney <$ eNotEnough
   in
-    Outputs eVend eSpend eChange eError
+    Outputs eVend eSpend eChange eNotEnoughMoney
 
 #ifndef ghcjs_HOST_OS
 go ::
