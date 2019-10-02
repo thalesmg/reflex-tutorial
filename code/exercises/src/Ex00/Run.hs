@@ -41,4 +41,3 @@ host fn = B.panel . divClass "card my-2" . divClass "card-body" . divClass "cont
            leftmost $ [eSecondOut, "" <$ eFirstOut]
 
   pure ()
-
