@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Ex03.Exercise where
 
 import qualified Data.Map as Map
@@ -18,16 +19,33 @@ ex03 ::
   Outputs t
 ex03 (Inputs bMoney bSelected eBuy eRefund) =
   let
+    tryBuy money p =
+      if pCost p <= money
+      then Right p
+      else Left p
+    (eNotEnough, eBought)
+      = fanEither
+      . attachWith tryBuy bMoney
+      $ eProduct
+    eProduct =
+      attachWithMaybe
+        (\productName _ -> case productName of
+            "Carrot" -> Just carrot
+            "Celery" -> Just celery
+            "Cucumber" -> Just cucumber
+            _ -> Nothing)
+        bSelected
+        eBuy
     eVend =
-      never
+      ffor eBought pName
     eSpend =
-      never
+      ffor eBought pCost
     eChange =
-      never
-    eError =
-      never
+      bMoney <@ eRefund
+    eNotEnoughMoney =
+      NotEnoughMoney <$ eNotEnough
   in
-    Outputs eVend eSpend eChange eError
+    Outputs eVend eSpend eChange eNotEnoughMoney
 
 #ifndef ghcjs_HOST_OS
 go ::
