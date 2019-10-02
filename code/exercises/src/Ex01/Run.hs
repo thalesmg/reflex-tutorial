@@ -133,7 +133,7 @@ changeDisplay ::
   Outputs t ->
   m (Dynamic t Money)
 changeDisplay (Outputs _ eSpend eChange eError) =
-  holdDyn 0 .  leftmost $ [
+  holdDyn 0 . leftmost $ [
       eChange
     , 0 <$ eSpend
     , 0 <$ eError

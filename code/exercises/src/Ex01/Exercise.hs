@@ -17,14 +17,25 @@ ex01 ::
   Outputs t
 ex01 money (Inputs eCarrot eCelery eCucumber eRefund) =
   let
+    tryBuy p =
+      if pCost p <= money
+      then Right p
+      else Left p
+    (eNotEnough, eBought)
+      = fanEither
+      . fmap tryBuy
+      $ leftmost [ carrot <$ eCarrot
+                 , celery <$ eCelery
+                 , cucumber <$ eCucumber
+                 ]
     eVend =
-      never
+      ffor eBought pName
     eSpend =
-      never
+      ffor eBought pCost
     eChange =
-      never
+      const money <$> eRefund
     eNotEnoughMoney =
-      never
+      () <$ eNotEnough
   in
     Outputs eVend eSpend eChange eNotEnoughMoney
 
