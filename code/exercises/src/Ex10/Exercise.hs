@@ -24,7 +24,7 @@ grid :: MonadWidget t m
      => m a
      -> m a
 grid =
-  el "table"
+  elClass "div" "container"
 
 row :: MonadWidget t m
     => m a
@@ -33,14 +33,14 @@ row :: MonadWidget t m
     -> m d
     -> m d
 row ma mb mc md =
-  el "tr" $ do
-    el "td" $
+  elClass "div" "row" $ do
+    elClass "div" "col-md-3" $
       ma
-    el "td" $
+    elClass "div" "col-md-1" $
       mb
-    el "td" $
+    elClass "div" "col-md-1" $
       mc
-    el "td" $
+    elClass "div" "col-md-1" $
       md
 
 buyRow :: MonadWidget t m
