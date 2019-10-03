@@ -9,6 +9,7 @@ module Ex10.Common (
   , celery
   , cucumber
   , Inputs(..)
+  , MoneyInputs(..)
   , Error(..)
   , errorText
   , Ex10FnGrid
@@ -72,6 +73,13 @@ data Error =
   | ItemOutOfStock
   deriving (Eq, Ord, Show)
 
+data MoneyInputs t =
+  MoneyInputs
+    { mieSpend :: Event t Money
+    , mieRefund :: Event t ()
+    , mieAdd :: Event t ()
+    }
+
 errorText ::
   Error ->
   Text
@@ -102,4 +110,3 @@ type Ex10FnMkStock t m =
 type Ex10FnMain t m =
   Inputs t ->
   m (Event t Text)
-
