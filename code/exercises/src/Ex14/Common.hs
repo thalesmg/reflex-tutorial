@@ -5,6 +5,8 @@ module Ex14.Common (
   , moneyDisplay
   , Product (..)
   , Stock (..)
+  , Outputs (..)
+  , MoneyInputs (..)
   , carrot
   , celery
   , cucumber
@@ -16,6 +18,8 @@ import Data.Monoid ((<>))
 
 import Data.Text
 import qualified Data.Text as Text
+
+import Reflex (Event)
 
 type Money = Int
 
@@ -57,6 +61,21 @@ data Error =
   | ItemOutOfStock
   deriving (Eq, Ord, Show)
 
+data Outputs t =
+  Outputs
+    { eoCarrotSelected :: Event t Text
+    , eoCelerySelected :: Event t Text
+    , eoCucumberSelected :: Event t Text
+    , eoVended :: Event t Text
+    }
+
+data MoneyInputs t =
+  MoneyInputs
+    { mieSpend :: Event t Money
+    , mieRefund :: Event t ()
+    , mieAdd :: Event t ()
+    }
+
 errorText ::
   Error ->
   Text
@@ -64,4 +83,3 @@ errorText NotEnoughMoney =
   "Insufficient funds"
 errorText ItemOutOfStock =
   "Item out of stock"
-
