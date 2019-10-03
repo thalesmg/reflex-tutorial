@@ -1,9 +1,12 @@
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE CPP #-}
 module Ex05.Exercise where
 
 import qualified Data.Map as Map
 
 import Reflex
+import Control.Monad (void)
 
 #ifndef ghcjs_HOST_OS
 import Util.Run
@@ -18,14 +21,42 @@ ex05 ::
   Outputs t
 ex05 (Inputs dMoney dCarrot dCelery dCucumber dSelected eBuy eRefund) =
   let
+    bMoney = current dMoney
+    bSelected = current dSelected
+    bCarrot = current dCarrot
+    bCelery = current dCelery
+    bCucumber = current dCucumber
+    tryBuy (money, pstock) = do
+      void $ checkMoney money pstock
+      checkStock pstock
+    checkMoney money pstock =
+      if money >= pCost (sProduct pstock)
+      then Right pstock
+      else Left NotEnoughMoney
+    checkStock pstock =
+      if sQuantity pstock > 0
+      then Right $ sProduct pstock
+      else Left ItemOutOfStock
+    (eError, eBought)
+      = fanEither
+      . fmap tryBuy
+      . attachWithMaybe
+          (\maybeProduct money -> (money,) <$> maybeProduct)
+          bmaybeProduct
+      $ bMoney <@ eBuy
+    bmaybeProduct = do
+      productName <- bSelected
+      case productName of
+        "Carrot" -> Just <$> bCarrot
+        "Celery" -> Just <$> bCelery
+        "Cucumber" -> Just <$> bCucumber
+        _ -> pure Nothing
     eVend =
-      never
+      ffor eBought pName
     eSpend =
-      never
+      ffor eBought pCost
     eChange =
-      never
-    eError =
-      never
+      bMoney <@ eRefund
   in
     Outputs eVend eSpend eChange eError
 
