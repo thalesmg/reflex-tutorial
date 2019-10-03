@@ -7,6 +7,7 @@ module Ex07.Common (
   , celery
   , cucumber
   , Inputs(..)
+  , MoneyInputs(..)
   , Outputs(..)
   , Error(..)
   , errorText
@@ -68,6 +69,13 @@ data Outputs t =
   , odVend   :: Dynamic t Text
   }
 
+data MoneyInputs t =
+  MoneyInputs
+    { mieSpend :: Event t Money
+    , mieRefund :: Event t ()
+    , mieAdd :: Event t ()
+    }
+
 data Error =
     NotEnoughMoney
   | ItemOutOfStock
@@ -82,4 +90,3 @@ errorText ItemOutOfStock =
   "Item out of stock"
 
 type Ex07Fn t m = Inputs t -> m (Outputs t)
-
