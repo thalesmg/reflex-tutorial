@@ -19,42 +19,48 @@ import Util.Run
 import Ex07.Common
 import Ex07.Run
 
-dChange :: MonadHold t m
+dynChange :: MonadHold t m
         => Reflex t
         => Event t ()
         -> Event t ()
         -> Dynamic t Money
         -> m (Dynamic t Money)
-dChange eAny eRefund dMoney =
+dynChange eAny eRefund dMoney =
   holdDyn 0 $
     leftmost [ current dMoney <@ eRefund
              , 0 <$ eAny
              ]
 
-dVend :: MonadHold t m
+dynVend :: MonadHold t m
       => Reflex t
       => Event t Text
       -> Event t Error
       -> Event t ()
       -> m (Dynamic t Text)
-dVend eVend eError eAny =
+dynVend eVend eError eAny =
   holdDyn "" $
     leftmost [ errorText <$> eError
              , eVend
              , "" <$ eAny
              ]
 
-dMoney :: MonadHold t m
+dynMoney :: MonadHold t m
        => MonadFix m
        => Reflex t
        => MoneyInputs t
        -> m (Dynamic t Money)
-dMoney (MoneyInputs eSpend eRefund eAdd) =
-  foldDyn ($) 0 . mergeWith (.) $
-    [ (.) (max 0) . (flip (-)) <$> eSpend
+dynMoney (MoneyInputs eSpend eRefund eAdd) = mdo
+  let
+    isOverspend money price = money < price
+    eOverspend =
+      isOverspend <$> current dMoney <@> eSpend
+    eSpendOk = difference eSpend (ffilter id eOverspend)
+  dMoney <- foldDyn ($) 0 . mergeWith (.) $
+    [ flip (-) <$> eSpendOk
     , const 0 <$ eRefund
     , (+ 1) <$ eAdd
     ]
+  pure dMoney
 
 ex07 ::
   ( Reflex t
@@ -64,9 +70,9 @@ ex07 ::
   Inputs t ->
   m (Outputs t)
 ex07 (Inputs dCarrot dCelery dCucumber dSelected eAdd eBuy eRefund) = mdo
-  dMoney' <- dMoney (MoneyInputs eSpend eRefund eAdd)
+  dMoney <- dynMoney (MoneyInputs eSpend eRefund eAdd)
   let
-    bMoney = current dMoney'
+    bMoney = current dMoney
     tryBuy (money, pstock) = do
       void $ checkMoney money pstock
       checkStock pstock
@@ -105,9 +111,9 @@ ex07 (Inputs dCarrot dCelery dCucumber dSelected eAdd eBuy eRefund) = mdo
                , () <$ updated dCucumber
                , eBuy
                ]
-  dChange' <- dChange eAny eRefund dMoney'
-  dVend' <- dVend eVend eError eAny
-  pure (Outputs eVend eSpend eChange eError dMoney' dChange' dVend')
+  dChange <- dynChange eAny eRefund dMoney
+  dVend <- dynVend eVend eError eAny
+  pure (Outputs eVend eSpend eChange eError dMoney dChange dVend)
 
 #ifndef ghcjs_HOST_OS
 go ::
